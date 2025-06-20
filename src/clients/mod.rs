@@ -68,7 +68,7 @@ pub struct Clients {
     #[cfg(feature = "tray")]
     tray: Option<Arc<tray::Client>>,
     #[cfg(feature = "upower")]
-    upower: Option<Arc<zbus::fdo::PropertiesProxy<'static>>>,
+    upower: Option<Arc<Vec<Arc<zbus::fdo::PropertiesProxy<'static>>>>>,
     #[cfg(feature = "volume")]
     volume: Option<Arc<volume::Client>>,
 }
@@ -239,11 +239,11 @@ impl Clients {
     }
 
     #[cfg(feature = "upower")]
-    pub fn upower(&mut self) -> ClientResult<zbus::fdo::PropertiesProxy<'static>> {
+    pub fn upower(&mut self) -> ClientResult<Vec<Arc<zbus::fdo::PropertiesProxy<'static>>>> {
         let client = if let Some(client) = &self.upower {
             client.clone()
         } else {
-            let client = await_sync(async { upower::create_display_proxy().await })?;
+            let client = await_sync(async { upower::create_proxies().await })?;
             self.upower.replace(client.clone());
             client
         };
